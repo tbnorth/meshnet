@@ -6,6 +6,10 @@ from scipy.optimize import least_squares
 
 pts = np.load('u:/repo/nrriboids/boids.np.array.npy')
 
+# Blender Boids params limited range, so scale up
+pts[:, :, 0:2] *= 150
+
+
 # get bounds on simulated x, y, z
 minx = pts[:, :, 0].min()
 maxx = pts[:, :, 0].max()
@@ -49,28 +53,66 @@ recvs = np.array([
 ]).transpose()
 
 # plot plan and fron elevation views of birds and receivers
+plt.figure(figsize=(10, 8))
+ax = plt.subplot(2, 2, 1)
+ax.set_aspect('equal')
+plt.xlabel('W-E m')
+plt.ylabel('S-N m')
+plt.title('Plan view, actual positions')
 for b in range(10):
-    plt.plot(pts[:, b, 0], pts[:, b, 1])
-plt.scatter(recvs[:, 0], recvs[:, 1])
-plt.show()
+    plt.plot(pts[:, b, 0], pts[:, b, 1], zorder=1)
+plt.scatter(recvs[:, 0], recvs[:, 1], c='k', zorder=2)
+plt.subplot(2, 2, 2)
+plt.xlabel('W-E m')
+plt.ylabel('Height m')
+plt.title('Front elev. view, actual positions')
 for b in range(10):
-    plt.plot(pts[:, b, 0], pts[:, b, 2])
-plt.scatter(recvs[:, 0], recvs[:, 2])
-plt.show()
+    plt.plot(pts[:, b, 0], pts[:, b, 2], zorder=1)
+plt.scatter(recvs[:, 0], recvs[:, 2], c='k', zorder=2)
 
 # use center of all data as initial guess for position
 start = np.array(((minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2))
 
 begin = time.time()
+ans = np.zeros_like(pts)
 for itr, brd in product(range(1000), range(10)):
     pos = pts[itr, brd]
     seps = pos - recvs
+
+    if 1:
+        # degrade resolutions of seps to 25% of receiver spacing
+        height_scale = height_base
+        height_scale = colsep
+        seps[:, :2] = (seps[:, :2] / (0.25*colsep)).astype(int) * 0.25*colsep
+        seps[:, 2] = (seps[:, 2] / (0.25*height_scale)).astype(int) * 0.25*height_scale
+        # add random noise of 10% of receiver spacing
+        seps[:, :2] += np.random.rand(rows*cols, 2)*0.1*colsep - 0.05*colsep
+        seps[:, 2] += np.random.rand(rows*cols)*0.1*height_scale - 0.05*height_scale
+
     def offby(x, seps=seps):
         return np.reshape(seps - (x - recvs), seps.size)
-    calc = least_squares(offby, start)
-    # print(pos, calc.x)
-    # break
+    ans[itr, brd] = least_squares(offby, start).x
+
 print("%d points in %f seconds, %f pts/sec" % (
     1000*10, time.time()-begin, 1000*10/(time.time()-begin)
 ))
+
+# plot plan and fron elevation views of birds and receivers
+ax = plt.subplot(2, 2, 3)
+ax.set_aspect('equal')
+plt.xlabel('W-E m')
+plt.ylabel('S-N m')
+plt.title('Plan view, calc. from separations')
+for b in range(10):
+    plt.plot(ans[:, b, 0], ans[:, b, 1], zorder=1)
+plt.scatter(recvs[:, 0], recvs[:, 1], c='k', zorder=2)
+plt.subplot(2, 2, 4)
+plt.xlabel('W-E m')
+plt.ylabel('Height m')
+plt.title('Front elev. view, calc. from separations')
+for b in range(10):
+    plt.plot(ans[:, b, 0], ans[:, b, 2], zorder=1)
+plt.scatter(recvs[:, 0], recvs[:, 2], c='k', zorder=2)
+plt.tight_layout()
+plt.savefig("compare.pdf")
 
