@@ -45,7 +45,8 @@ only covers 5, so the relative error is much greater.
 The least squared solution is not terribly fast, about 100 pings per
 second on a desktop. 50 birds pinging once ever 5 seconds is only 10
 pings per second, so speed is probably not an issue, although constant
-number crunching will increase power consumption.
+number crunching will increase power consumption.  There are probably
+much better (less general) solutions, e.g. see [Multilateration](https://en.wikipedia.org/wiki/Multilateration)
 
 So the question is how precisely can we measure separation from pinger
 to tower. If the towers share a common clock and report time of arrival
