@@ -76,21 +76,21 @@ start = np.array(((minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2))
 begin = time.time()
 ans = np.zeros_like(pts)
 for itr, brd in product(range(1000), range(10)):
+    if itr%10 == 0 and brd == 0:
+        print(itr)
     pos = pts[itr, brd]
-    seps = pos - recvs
+    seps = np.sqrt(np.power(pos - recvs, 2).sum(axis=1))
 
-    if 1:
+    if 0:
         # degrade resolutions of seps to 25% of receiver spacing
-        height_scale = height_base
-        height_scale = colsep
-        seps[:, :2] = (seps[:, :2] / (0.25*colsep)).astype(int) * 0.25*colsep
-        seps[:, 2] = (seps[:, 2] / (0.25*height_scale)).astype(int) * 0.25*height_scale
+        seps = (seps / (0.25*colsep)).astype(int) * 0.25*colsep
         # add random noise of 10% of receiver spacing
-        seps[:, :2] += np.random.rand(rows*cols, 2)*0.1*colsep - 0.05*colsep
-        seps[:, 2] += np.random.rand(rows*cols)*0.1*height_scale - 0.05*height_scale
+        seps += np.random.rand(rows*cols)*0.1*colsep - 0.05*colsep
 
     def offby(x, seps=seps):
-        return np.reshape(seps - (x - recvs), seps.size)
+        cur = np.sqrt(np.power(x - recvs, 2).sum(axis=1))
+        return seps - cur
+
     ans[itr, brd] = least_squares(offby, start).x
 
 print("%d points in %f seconds, %f pts/sec" % (
