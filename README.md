@@ -3,9 +3,10 @@
 
 Use [Blender](https://www.blender.org/) to generate a synthetic
 data set of x,y,z positions for “birds”, see
-https://www.youtube.com/watch?v=bsCFReO-z1A
+[this video](https://www.youtube.com/watch?v=bsCFReO-z1A)
 
-Extract x, y, z from Blender boids particles
+Extract x, y, z from Blender boids particles (in Blender
+Python console)
 
 ```python
 # select particle generator object in view
@@ -51,7 +52,9 @@ to tower. If the towers share a common clock and report time of arrival
 of the ping, they need to time ping arrivals in nano seconds, or at
 least tens of nanoseconds. TODO: see if PyBoards support
 [utime.ticks_cpu()](https://docs.micropython.org/en/latest/pyboard/library/utime.html#utime.ticks_cpu)
-and what the resolution is.
+and what the resolution is. Microsecond timing gives a resolution of
+about 300 m, much worse than the simluated 50 m resolution in
+compare_degraded.pdf
 
 [Multilateration](https://en.wikipedia.org/wiki/Multilateration) uses
 signal phase shift to get precise timings, not sure if FunCube dongle
