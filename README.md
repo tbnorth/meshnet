@@ -53,7 +53,7 @@ to tower. If the towers share a common clock and report time of arrival
 of the ping, they need to time ping arrivals in nano seconds, or at
 least tens of nanoseconds. TODO: see if PyBoards support
 [utime.ticks_cpu()](https://docs.micropython.org/en/latest/pyboard/library/utime.html#utime.ticks_cpu)
-and what the resolution is. Microsecond timing gives a resolution of
+and what the resolution is - DONE, see below. Microsecond timing gives a resolution of
 about 300 m, much worse than the simluated 50 m resolution in
 compare_degraded.pdf
 
@@ -67,3 +67,19 @@ and (c) there's enough resolution / difference in strength between
 towers, then that may avoid some of the issues with time based
 separation measurements.
 
+### utime.ticks_cpu()
+
+`ticks_cpu()` is supported by the PyBoard, and the PyBoard runs at
+168000000 Hz.  299792458 * (1/168000000) = 1.78447891667, or a potential
+resolution of 1.8 m per CPU cycle.  Might still be coarse for vertical.
+
+```python
+# demo ticks_cpu()
+a = b = time.ticks_cpu()
+for i in range(1000):
+    print(b-a)
+    print(time.ticks_diff(b, a))
+    b = a
+    a = time.ticks_cpu()
+    time.sleep(1)
+```
